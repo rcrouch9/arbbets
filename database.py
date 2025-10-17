@@ -1,9 +1,11 @@
 import sqlite3
 from datetime import datetime, timezone
 
-con = sqlite3.connect('odds.db')
-cur = con.cursor()
-
+def connect_db():
+    global con, cur
+    con = sqlite3.connect('odds.db')
+    cur = con.cursor()
+    
 def insert(games):
 
     cur.execute('''
@@ -127,24 +129,29 @@ def read_odds():
     return cur.fetchall()
 
 def clean_up():
-    cur.execute("SELECT id, startTime FROM odds")
-    rows = cur.fetchall()
+    
+    try: 
+        cur.execute("SELECT id, startTime FROM odds")
+        rows = cur.fetchall()
 
-    for row in rows:
-        row_id, start_time_str = row
+        for row in rows:
+            row_id, start_time_str = row
 
-        try:
-            # Parse the startTime string into a datetime object
-            # Remove the trailing 'Z' and parse the rest
-            start_time = datetime.strptime(start_time_str[:-1], "%Y-%m-%dT%H:%M:%S.%f")
-            start_time = start_time.replace(tzinfo=timezone.utc)
+            try:
+                # Parse the startTime string into a datetime object
+                # Remove the trailing 'Z' and parse the rest
+                start_time = datetime.strptime(start_time_str[:-1], "%Y-%m-%dT%H:%M:%S.%f")
+                start_time = start_time.replace(tzinfo=timezone.utc)
 
-            # Get current UTC time
-            now = datetime.now(timezone.utc)
+                # Get current UTC time
+                now = datetime.now(timezone.utc)
 
-            # If the game has started, delete the row
-            if start_time <= now:
-                cur.execute("DELETE FROM odds WHERE id = ?", (row_id,))
-        except Exception as e:
-            print(f"Error parsing time for row {row_id}: {e}")
-    con.commit()
+                # If the game has started, delete the row
+                if start_time <= now:
+                    cur.execute("DELETE FROM odds WHERE id = ?", (row_id,))
+            except Exception as e:
+                print(f"Error parsing time for row {row_id}: {e}")
+        con.commit()
+        
+    except Exception as e:
+        print("Creating new odds table")
