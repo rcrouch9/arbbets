@@ -2,8 +2,8 @@ import database
 import scrapers.fanduel_scrape as fanduel_scrape, scrapers.draftkings_scrape as draftkings_scrape
 import arb_engine
 
-database.clean_up()
 database.connect_db()
+database.clean_up()
 
 fanduel_scrape.scrape_fd_api()
 draftkings_scrape.scrape_dk_api()
